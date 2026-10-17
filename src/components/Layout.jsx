@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Check, Menu, Search, ShoppingBag, X } from 'lucide-react';
+import { Check, Heart, Menu, Search, ShoppingBag, X } from 'lucide-react';
 import { useStore } from '../lib/store.jsx';
 
 const NAV = [
@@ -11,7 +11,8 @@ const NAV = [
 ];
 
 export function Header() {
-  const { count } = useStore();
+  const { count, favorites, byId, products } = useStore();
+  const favCount = products ? favorites.filter((id) => byId.has(id)).length : favorites.length;
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   useEffect(() => setOpen(false), [loc.pathname, loc.search, loc.hash]);
@@ -33,6 +34,10 @@ export function Header() {
           <Link to="/catalog?search=1" className="icon-link search-link" aria-label="Пошук">
             <Search size={20} strokeWidth={1.7} />
           </Link>
+          <Link to="/favorites" className="cart-link fav-link" aria-label={`Обране: ${favCount}`}>
+            <Heart size={20} strokeWidth={1.7} />
+            {favCount > 0 && <span className="cart-count">{favCount}</span>}
+          </Link>
           <Link to="/cart" className="cart-link" aria-label={`Кошик, товарів: ${count}`}>
             <ShoppingBag size={20} strokeWidth={1.7} />
             {count > 0 && <span className="cart-count">{count}</span>}
@@ -49,6 +54,7 @@ export function Header() {
           <Link to="/catalog?f=male">Для нього</Link>
           <Link to="/catalog?f=unisex">Унісекс</Link>
           <Link to="/cart">Кошик</Link>
+          <Link to="/favorites">Обране</Link>
           <Link to="/delivery">Доставка та оплата</Link>
           <Link to="/delivery#contacts">Контакти</Link>
         </div>

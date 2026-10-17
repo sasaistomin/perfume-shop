@@ -2471,3 +2471,42 @@
     border-radius: 999px;
   }
 }
+
+/* ---------- обране ---------- */
+
+.favs {
+  min-height: 60vh;
+}
+
+.favs-empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 56px 20px;
+  border-radius: var(--r-lg);
+  background: var(--tint);
+}
+
+.favs-empty p {
+  max-width: 420px;
+}
+
+.favs-ic {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: #e11d48;
+  box-shadow: var(--shadow-sm);
+}
+
+.favs-gone {
+  margin-top: 24px;
+}
+
+.fav-link .cart-count {
+  background: #e11d48;
+}

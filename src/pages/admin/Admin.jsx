@@ -1,37 +1,43 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Copy, Eye, EyeOff, LogOut, Plus, RefreshCw, Trash2 } from 'lucide-react';
-import { adminApi, login } from '../../lib/api.js';
+import { adminApi, checkSession, login, logout } from '../../lib/api.js';
 import { GENDER_LABEL, STATUS, date, dateTime, minPrice, money, plural } from '../../lib/format.js';
 import { ProductImg } from '../../components/Art.jsx';
 import { Stars } from '../../components/ui.jsx';
 import ProductForm from './ProductForm.jsx';
-
-const TOKEN_KEY = 'delas.admin';
-const getToken = () => {
-  try {
-    return sessionStorage.getItem(TOKEN_KEY) || '';
-  } catch {
-    return '';
-  }
-};
+import Stats from './Stats.jsx';
 
 export default function Admin() {
-  const [token, setToken] = useState(getToken);
-  const saveToken = (t) => {
-    try {
-      if (t) sessionStorage.setItem(TOKEN_KEY, t);
-      else sessionStorage.removeItem(TOKEN_KEY);
-    } catch {
-      /* ignore */
-    }
-    setToken(t);
-  };
-  if (!token) return <Login onToken={saveToken} />;
-  return <Panel token={token} onLogout={() => saveToken('')} />;
+  // null — перевіряємо, true — увійшли, false — потрібен вхід
+  const [authed, setAuthed] = useState(null);
+  const [notice, setNotice] = useState('');
+  useEffect(() => {
+    checkSession()
+      .then(() => setAuthed(true))
+      .catch((e) => {
+        if (e.status === 503) setNotice(e.message);
+        setAuthed(false);
+      });
+  }, []);
+  if (authed === null)
+    return (
+      <div className="admin admin-login">
+        <div className="spinner" />
+      </div>
+    );
+  if (!authed) return <Login onDone={() => setAuthed(true)} notice={notice} />;
+  return (
+    <Panel
+      onLogout={() => {
+        logout().catch(() => {});
+        setAuthed(false);
+      }}
+    />
+  );
 }
 
-function Login({ onToken }) {
+function Login({ onDone, notice }) {
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
   const [state, setState] = useState({ busy: false, error: '' });
@@ -39,8 +45,8 @@ function Login({ onToken }) {
     e.preventDefault();
     setState({ busy: true, error: '' });
     try {
-      const { token } = await login(password);
-      onToken(token);
+      await login(password);
+      onDone();
     } catch (err) {
       setState({ busy: false, error: err.message });
     }
@@ -50,6 +56,7 @@ function Login({ onToken }) {
       <form className="card login-card" onSubmit={submit}>
         <p className="logo">DeLas</p>
         <h1>Вхід в адмінку</h1>
+        {notice && <p className="form-error">{notice}</p>}
         <label className="field">
           <span>Пароль</span>
           <div className="pw">
@@ -73,14 +80,15 @@ function Login({ onToken }) {
 
 const TABS = [
   ['orders', 'Замовлення'],
+  ['stats', 'Статистика'],
   ['products', 'Товари'],
   ['reviews', 'Відгуки'],
   ['subscribers', 'Підписники'],
   ['promos', 'Промокоди'],
 ];
 
-function Panel({ token, onLogout }) {
-  const api = useMemo(() => adminApi(token), [token]);
+function Panel({ onLogout }) {
+  const api = useMemo(() => adminApi(), []);
   const [tab, setTab] = useState('orders');
   const [data, setData] = useState({ orders: null, products: null, reviews: null, subscribers: null, promos: null });
   const [error, setError] = useState('');
@@ -151,6 +159,7 @@ function Panel({ token, onLogout }) {
           </p>
         )}
         {tab === 'orders' && <Orders api={api} guard={guard} orders={data.orders} products={data.products} reload={load} />}
+        {tab === 'stats' && <Stats orders={data.orders} products={data.products} />}
         {tab === 'products' && <Products api={api} guard={guard} products={data.products} reload={load} />}
         {tab === 'reviews' && <Reviews api={api} guard={guard} reviews={data.reviews} reload={load} />}
         {tab === 'subscribers' && <Subscribers api={api} guard={guard} list={data.subscribers} reload={load} />}

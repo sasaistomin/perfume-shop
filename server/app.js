@@ -5,12 +5,26 @@ import { cleanProduct, digitsCount, isEmail, str, toInt } from './validate.js';
 import { cleanDelivery, deliveryText, hasNovaPoshta, searchCities, searchPoints } from './delivery.js';
 import { saveUpload, store } from './store.js';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const SESSION_TTL = 12 * 60 * 60 * 1000;
+const IS_PROD = Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (IS_PROD ? '' : 'admin123');
+const SESSION_TTL = 8 * 60 * 60 * 1000;
+const COOKIE = 'delas_admin';
+
+// На опублікованому сайті слабкий пароль просто не приймається — адмінка вимкнена, доки його не змінять.
+const WEAK = ['admin123', 'vercel', 'password', 'qwerty', '12345678', 'delas', 'delasparfume', 'perfume', 'admin'];
+function passwordProblem() {
+  if (!ADMIN_PASSWORD) return 'Адмінку вимкнено: не задано ADMIN_PASSWORD у налаштуваннях хостингу.';
+  if (!IS_PROD) return '';
+  if (ADMIN_PASSWORD.length < 12 || WEAK.some((w) => ADMIN_PASSWORD.toLowerCase().includes(w)) || /^(.)\1+$/.test(ADMIN_PASSWORD)) {
+    return 'Адмінку вимкнено: пароль ADMIN_PASSWORD надто простий. Задайте у Vercel довгий пароль (від 12 символів, без слів admin/vercel/delas) і зробіть Redeploy.';
+  }
+  return '';
+}
 const STATUSES = ['new', 'confirmed', 'shipped', 'done', 'cancelled'];
 const GIFT_FEE = 80;
 
 export const usingDefaultPassword = !process.env.ADMIN_PASSWORD;
+export const adminPasswordProblem = passwordProblem;
 
 const uid = (bytes = 5) => crypto.randomBytes(bytes).toString('hex');
 
@@ -74,7 +88,18 @@ const write = (fn) => async (req, res, next) => {
 /* ------------------------------------------------------------ авторизація */
 // Токен підписаний паролем: працює на кількох серверах одночасно (Vercel) і стає недійсним після зміни пароля.
 
-const SECRET = crypto.createHash('sha256').update(`delas-session:${process.env.SESSION_SECRET || ''}:${ADMIN_PASSWORD}`).digest();
+// Секрет підпису складається з даних, яких немає в коді на GitHub: SESSION_SECRET, пароля та ключа бази.
+const SECRET = crypto
+  .createHash('sha256')
+  .update(
+    [
+      'delas-session-v2',
+      process.env.SESSION_SECRET || '',
+      ADMIN_PASSWORD,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.KV_REST_API_TOKEN || '',
+    ].join('|')
+  )
+  .digest();
 const sign = (payload) => crypto.createHmac('sha256', SECRET).update(payload).digest('base64url');
 
 function makeToken() {
@@ -100,13 +125,37 @@ const safeEqual = (a, b) => {
   return crypto.timingSafeEqual(ha, hb);
 };
 
+function readCookie(req, name) {
+  const raw = req.headers.cookie || '';
+  for (const part of raw.split(';')) {
+    const i = part.indexOf('=');
+    if (i > 0 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
+  }
+  return '';
+}
+
+function setSessionCookie(req, res, token, maxAgeSec) {
+  const secure = IS_PROD || req.secure || req.headers['x-forwarded-proto'] === 'https';
+  res.setHeader(
+    'Set-Cookie',
+    `${COOKIE}=${token ? encodeURIComponent(token) : ''}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${maxAgeSec}${secure ? '; Secure' : ''}`
+  );
+}
+
+// Токен живе лише в HttpOnly-cookie: JavaScript на сторінці (і чужі скрипти) його не бачать.
+// Будь-яка зміна даних додатково вимагає заголовок X-Delas-Admin — інший сайт не може його підставити (захист від CSRF).
 function requireAdmin(req, res, next) {
-  const token = (req.headers.authorization || '').replace(/^Bearer /, '');
+  if (passwordProblem()) return res.status(503).json({ error: passwordProblem() });
+  const token = readCookie(req, COOKIE);
   if (!token || !validToken(token)) return res.status(401).json({ error: 'Потрібен вхід' });
+  if (req.method !== 'GET' && req.headers['x-delas-admin'] !== '1') return res.status(403).json({ error: 'Заборонено' });
   next();
 }
 
 /* ------------------------------------------------------------------ сервер */
+
+export const CSP =
+  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'";
 
 const app = express();
 app.disable('x-powered-by');
@@ -117,6 +166,9 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  if (!req.path.startsWith('/api')) res.setHeader('Content-Security-Policy', CSP);
   if (req.path.startsWith('/api')) res.setHeader('Cache-Control', 'no-store');
   next();
 });
@@ -300,7 +352,10 @@ app.post(
 
 // ---- адмін-API
 
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', async (req, res) => {
+  const problem = passwordProblem();
+  if (problem) return res.status(503).json({ error: problem });
+  if (req.headers['x-delas-admin'] !== '1') return res.status(403).json({ error: 'Заборонено' });
   const ip = req.ip;
   const now = Date.now();
   let rec = failedLogins.get(ip);
@@ -308,13 +363,22 @@ app.post('/api/admin/login', (req, res) => {
     rec = { count: 0, reset: now + 15 * 60 * 1000 };
     failedLogins.set(ip, rec);
   }
-  if (rec.count >= 10) return res.status(429).json({ error: 'Забагато спроб. Спробуйте через 15 хвилин.' });
+  if (rec.count >= 5) return res.status(429).json({ error: 'Забагато спроб. Спробуйте через 15 хвилин.' });
   if (!safeEqual(req.body?.password ?? '', ADMIN_PASSWORD)) {
     rec.count++;
+    await new Promise((r) => setTimeout(r, 700 + Math.random() * 300)); // уповільнюємо перебір паролів
     return res.status(401).json({ error: 'Невірний пароль' });
   }
   failedLogins.delete(ip);
-  res.json({ token: makeToken() });
+  setSessionCookie(req, res, makeToken(), SESSION_TTL / 1000);
+  res.json({ ok: true });
+});
+
+app.get('/api/admin/session', requireAdmin, (req, res) => res.json({ ok: true }));
+
+app.post('/api/admin/logout', (req, res) => {
+  setSessionCookie(req, res, '', 0);
+  res.json({ ok: true });
 });
 
 app.get('/api/admin/products', requireAdmin, read((req, db) => ({ body: db.products.map(withRating(db)) })));
