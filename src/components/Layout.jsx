@@ -107,10 +107,10 @@ const Social = () => (
       Instagram
     </a>
     <a href="https://facebook.com" target="_blank" rel="noreferrer">
-      Facebook
+      Telegram
     </a>
     <a href="https://youtube.com" target="_blank" rel="noreferrer">
-      YouTube
+      Email
     </a>
   </div>
 );
