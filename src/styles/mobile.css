@@ -154,7 +154,7 @@
   }
 
   .mmenu--open {
-    max-height: 420px;
+    max-height: 520px;
     border-top-color: var(--line);
     box-shadow: var(--shadow-lg);
   }
@@ -1547,5 +1547,26 @@
 @media (max-width: 360px) {
   .vol-pill {
     display: none;
+  }
+}
+
+/* на телефоні перемикач мови — у меню під бургером, щоб шапка лишалась як у макеті */
+@media (max-width: 860px) {
+  .header-actions > .lang-switch {
+    display: none;
+  }
+  .mmenu-inner .lang-switch--menu {
+    display: flex;
+    gap: 8px;
+    padding-top: 14px;
+    font-size: 14px;
+  }
+  .mmenu-inner .lang-switch--menu a {
+    padding: 8px 14px;
+    border: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .mmenu-inner .lang-switch--menu a.on {
+    border-color: currentColor;
   }
 }

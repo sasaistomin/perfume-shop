@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { cleanProduct, digitsCount, isEmail, str, toInt } from './validate.js';
 import { cleanDelivery, deliveryText, hasNovaPoshta, searchCities, searchPoints } from './delivery.js';
 import { saveUpload, store } from './store.js';
+import { adminPage, mountSeo } from './seo.js';
 
 const IS_PROD = Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (IS_PROD ? '' : 'admin123');
@@ -567,6 +568,10 @@ app.post('/api/admin/upload', requireAdmin, bigJson, async (req, res, next) => {
 });
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
+
+// Сторінки сайту з заголовками та описами для пошукових систем, sitemap.xml, robots.txt.
+app.get(['/admin', '/admin/*'], adminPage);
+mountSeo(app);
 
 export function errorHandler(err, req, res, next) {
   if (err?.type === 'entity.parse.failed' || err?.type === 'entity.too.large') {

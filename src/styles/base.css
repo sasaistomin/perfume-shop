@@ -1069,3 +1069,55 @@ input[type='checkbox'] {
     align-items: flex-start;
   }
 }
+
+/* перемикач мови */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 4px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+.lang-switch a {
+  padding: 6px 7px;
+  border-radius: 6px;
+  color: var(--muted, #8a8178);
+}
+.lang-switch a.on {
+  color: inherit;
+  font-weight: 600;
+}
+.lang-switch a:hover {
+  background: var(--tint);
+}
+.lang-switch--menu {
+  display: none;
+}
+
+/* Текстова версія сторінки для пошукових систем (server/seo.js).
+   Звичайні відвідувачі її не бачать: React замінює її інтерфейсом за долі секунди.
+   Якщо JavaScript вимкнено, вона з’являється через 1,5 с. */
+.seo-shell {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+  line-height: 1.6;
+  opacity: 0;
+  animation: seo-shell-in 0.2s ease 1.5s forwards;
+}
+.seo-shell header a {
+  font-family: 'Inria Serif', serif;
+  font-size: 32px;
+}
+.seo-shell nav {
+  margin: 8px 0 24px;
+}
+.seo-shell li {
+  margin: 6px 0;
+}
+@keyframes seo-shell-in {
+  to {
+    opacity: 1;
+  }
+}

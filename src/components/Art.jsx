@@ -1,3 +1,4 @@
+import { nn, pn } from '../lib/i18n.jsx';
 import { useState } from 'react';
 
 // Намальований флакон — показується, поки немає справжнього фото (або якщо фото не завантажилось).
@@ -6,7 +7,13 @@ export function Bottle({ name = '', brand = 'DeLas', color = '#f5f0ea', accent =
   const bg1 = dark ? '#2a2420' : color;
   const bg2 = dark ? '#0f0d0c' : shade(color, -10);
   return (
-    <svg className={`art-bottle ${className}`} viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" role="img" aria-label={name || brand}>
+    <svg
+      className={`art-bottle ${className}`}
+      viewBox="0 0 400 400"
+      preserveAspectRatio="xMidYMid slice"
+      role="img"
+      aria-label={name || brand}
+    >
       <defs>
         <radialGradient id={`${id}bg`} cx="50%" cy="38%" r="75%">
           <stop offset="0" stopColor={shade(bg1, 6)} />
@@ -53,7 +60,7 @@ export function ProductImg({ product, index = 0, dark, className = '' }) {
     <Img
       key={src}
       src={src}
-      alt={product?.name}
+      alt={pn(product)}
       className={`cover ${className}`}
       fallback={
         <Bottle
@@ -208,11 +215,11 @@ export function NoteImage({ note, size = 64 }) {
   return (
     <Img
       src={note.image}
-      alt={note.name}
+      alt={nn(note)}
       className="note-photo"
       style={{ width: size, height: size }}
       fallback={
-        <svg className="note-photo" width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={note.name}>
+        <svg className="note-photo" width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={nn(note)}>
           <circle cx="32" cy="32" r="32" fill={art.bg} />
           <NoteGlyph type={note.type} fg={art.fg} />
         </svg>
@@ -235,7 +242,9 @@ function shade(hex, pct) {
   if (!m) return hex;
   const n = parseInt(m[1], 16);
   const f = (c) => Math.max(0, Math.min(255, Math.round(c + (pct / 100) * (pct > 0 ? 255 - c : c))));
-  const r = f(n >> 16), g = f((n >> 8) & 255), b = f(n & 255);
+  const r = f(n >> 16),
+    g = f((n >> 8) & 255),
+    b = f(n & 255);
   return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
 }
 

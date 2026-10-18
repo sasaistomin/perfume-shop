@@ -37,7 +37,8 @@ function cleanNotes(raw) {
       const image = cleanUrl(item?.image);
       if (image === null) return { error: `Нота «${name}»: некоректне посилання на фото` };
       const type = NOTE_TYPES.includes(item?.type) ? item.type : 'other';
-      out[group].push({ name, type, image });
+      const nameRu = str(item?.nameRu, 40);
+      out[group].push(nameRu ? { name, nameRu, type, image } : { name, type, image });
     }
   }
   return { value: out };
@@ -87,6 +88,12 @@ export function cleanProduct(b) {
       category: str(b.category, 60),
       tags,
       description: str(b.description, 2000),
+      // російська версія сайту (/ru); порожні поля — показується український текст
+      ru: {
+        name: str(b.ru?.name, 120),
+        description: str(b.ru?.description, 2000),
+        category: str(b.ru?.category, 60),
+      },
       isNew: b.isNew === true,
       featured: b.featured === true,
       visible: b.visible !== false,
@@ -99,6 +106,8 @@ export function cleanProduct(b) {
         name: str(b.perfumer?.name, 80),
         title: str(b.perfumer?.title, 80),
         bio: str(b.perfumer?.bio, 1000),
+        titleRu: str(b.perfumer?.titleRu, 80),
+        bioRu: str(b.perfumer?.bioRu, 1000),
         photo,
       },
     },

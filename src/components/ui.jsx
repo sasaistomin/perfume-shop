@@ -1,10 +1,9 @@
+import { t, Link } from '../lib/i18n.jsx';
 import { Heart, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useStore } from '../lib/store.jsx';
-
 export function Stars({ value = 0, size = 14, count }) {
   return (
-    <span className="stars" aria-label={`Рейтинг ${value} з 5`}>
+    <span className="stars" aria-label={t('Рейтинг {0} з 5', value)}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star key={i} size={size} strokeWidth={1.6} className={i <= Math.round(value) ? 'on' : ''} />
       ))}
@@ -16,7 +15,6 @@ export function Stars({ value = 0, size = 14, count }) {
     </span>
   );
 }
-
 export function HeartButton({ id, className = '' }) {
   const { favorites, toggleFav } = useStore();
   const on = favorites.includes(id);
@@ -24,7 +22,7 @@ export function HeartButton({ id, className = '' }) {
     <button
       type="button"
       className={`heart ${on ? 'on' : ''} ${className}`}
-      aria-label={on ? 'Прибрати з обраного' : 'Додати в обране'}
+      aria-label={on ? t('Прибрати з обраного') : t('Додати в обране')}
       aria-pressed={on}
       onClick={(e) => {
         e.preventDefault();
@@ -36,8 +34,7 @@ export function HeartButton({ id, className = '' }) {
     </button>
   );
 }
-
-export function SectionHead({ title, sub, link, linkText = 'Дивитись усі →', eyebrow }) {
+export function SectionHead({ title, sub, link, linkText = t('Дивитись усі →'), eyebrow }) {
   return (
     <div className="section-head">
       <div>
@@ -53,11 +50,9 @@ export function SectionHead({ title, sub, link, linkText = 'Дивитись у�
     </div>
   );
 }
-
 export function Spinner() {
-  return <div className="spinner" role="status" aria-label="Завантаження" />;
+  return <div className="spinner" role="status" aria-label={t('Завантаження')} />;
 }
-
 export function Empty({ title, children }) {
   return (
     <div className="empty">

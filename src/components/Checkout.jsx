@@ -1,16 +1,29 @@
+import { t, useLNavigate } from '../lib/i18n.jsx';
 import { useEffect, useId, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Box, Home, Info, MapPin, Package, X } from 'lucide-react';
 import { useStore } from '../lib/store.jsx';
 import { api } from '../lib/api.js';
 import { money } from '../lib/format.js';
-
 const METHODS = [
-  { key: 'branch', label: 'Відділення', sub: 'Нова пошта', icon: Package },
-  { key: 'postomat', label: 'Поштомат', sub: 'Нова пошта', icon: Box },
-  { key: 'courier', label: 'Кур’єр', sub: 'до дверей', icon: Home },
+  {
+    key: 'branch',
+    label: 'Відділення',
+    sub: 'Нова пошта',
+    icon: Package,
+  },
+  {
+    key: 'postomat',
+    label: 'Поштомат',
+    sub: 'Нова пошта',
+    icon: Box,
+  },
+  {
+    key: 'courier',
+    label: 'Кур’єр',
+    sub: 'до дверей',
+    icon: Home,
+  },
 ];
-
 const SAVED_KEY = 'delas.checkout';
 const readSaved = () => {
   try {
@@ -31,10 +44,9 @@ function formatPhone(raw) {
   const p = [d.slice(0, 3), d.slice(3, 5), d.slice(5, 8), d.slice(8, 10), d.slice(10, 12)].filter(Boolean);
   return '+' + p.join(' ');
 }
-
 export default function Checkout({ total, onClose }) {
   const { cart, lines, clear, rememberOrder, reload } = useStore();
-  const navigate = useNavigate();
+  const navigate = useLNavigate();
   const saved = useState(readSaved)[0];
   const [form, setForm] = useState({
     name: saved.name || '',
@@ -52,12 +64,16 @@ export default function Checkout({ total, onClose }) {
     apartment: '',
   });
   const [np, setNp] = useState(false);
-  const [state, setState] = useState({ busy: false, error: '' });
-
+  const [state, setState] = useState({
+    busy: false,
+    error: '',
+  });
   useEffect(() => {
-    api.config().then((c) => setNp(Boolean(c.novaPoshta))).catch(() => {});
+    api
+      .config()
+      .then((c) => setNp(Boolean(c.novaPoshta)))
+      .catch(() => {});
   }, []);
-
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
     document.addEventListener('keydown', onKey);
@@ -67,88 +83,135 @@ export default function Checkout({ total, onClose }) {
       document.body.style.overflow = '';
     };
   }, [onClose]);
-
-  const setDel = (patch) => setD((x) => ({ ...x, ...patch }));
+  const setDel = (patch) =>
+    setD((x) => ({
+      ...x,
+      ...patch,
+    }));
   const phoneDigits = form.phone.replace(/\D/g, '').length;
-
   const submit = async (e) => {
     e.preventDefault();
     if (phoneDigits < 12 && form.phone.startsWith('+380')) {
-      setState({ busy: false, error: 'Номер телефону неповний: потрібно 9 цифр після +380' });
+      setState({
+        busy: false,
+        error: t('Номер телефону неповний: потрібно 9 цифр після +380'),
+      });
       return;
     }
-    setState({ busy: true, error: '' });
+    setState({
+      busy: true,
+      error: '',
+    });
     try {
       const res = await api.createOrder({
         customer: form,
         delivery: d,
-        items: lines.map((l) => ({ id: l.id, ml: l.ml, qty: l.qty })),
+        items: lines.map((l) => ({
+          id: l.id,
+          ml: l.ml,
+          qty: l.qty,
+        })),
         gift: cart.gift,
         promo: cart.promo?.code || '',
       });
       try {
-        localStorage.setItem(SAVED_KEY, JSON.stringify({ name: form.name, phone: form.phone, method: d.method, city: d.city, cityRef: d.cityRef }));
+        localStorage.setItem(
+          SAVED_KEY,
+          JSON.stringify({
+            name: form.name,
+            phone: form.phone,
+            method: d.method,
+            city: d.city,
+            cityRef: d.cityRef,
+          }),
+        );
       } catch {
         /* приватний режим */
       }
-      rememberOrder({ id: res.id, total: res.total, at: new Date().toISOString() });
+      rememberOrder({
+        id: res.id,
+        total: res.total,
+        at: new Date().toISOString(),
+      });
       clear();
       reload();
-      navigate(`/order/${res.id}`, { state: { total: res.total, name: form.name } });
+      navigate(`/order/${res.id}`, {
+        state: {
+          total: res.total,
+          name: form.name,
+        },
+      });
     } catch (err) {
-      setState({ busy: false, error: err.message });
+      setState({
+        busy: false,
+        error: t(err.message),
+      });
       if (err.status === 409) reload();
     }
   };
-
-  const pointLabel = d.method === 'postomat' ? 'Поштомат' : 'Відділення';
-
+  const pointLabel = d.method === 'postomat' ? t('Поштомат') : t('Відділення');
   return (
     <div className="modal-back" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal modal--checkout" role="dialog" aria-modal="true" aria-labelledby="co-title">
-        <button type="button" className="modal-x" aria-label="Закрити" onClick={onClose}>
+        <button type="button" className="modal-x" aria-label={t('Закрити')} onClick={onClose}>
           <X size={18} />
         </button>
-        <p className="eyebrow">Оформлення</p>
-        <h2 id="co-title">Куди доставити?</h2>
-        <p className="muted small">Після замовлення ми зателефонуємо, щоб підтвердити склад і оплату.</p>
+        <p className="eyebrow">{t('Оформлення')}</p>
+        <h2 id="co-title">{t('Куди доставити?')}</h2>
+        <p className="muted small">{t('Після замовлення ми зателефонуємо, щоб підтвердити склад і оплату.')}</p>
 
         <form className="form" onSubmit={submit} noValidate={false}>
           <fieldset className="co-block">
-            <legend>Отримувач</legend>
+            <legend>{t('Отримувач')}</legend>
             <label className="field">
-              <span>Ім’я та прізвище *</span>
+              <span>{t('Ім’я та прізвище *')}</span>
               <input
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    name: e.target.value,
+                  })
+                }
                 required
                 minLength={2}
                 maxLength={100}
                 autoComplete="name"
-                placeholder="Олена Коваль"
+                placeholder={t('Олена Коваль')}
               />
-              <small className="hint">Як у паспорті — посилку видадуть на це ім’я.</small>
+              <small className="hint">{t('Як у паспорті — посилку видадуть на це ім’я.')}</small>
             </label>
             <label className="field">
-              <span>Телефон *</span>
+              <span>{t('Телефон *')}</span>
               <input
                 type="tel"
                 inputMode="tel"
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: formatPhone(e.target.value) })}
-                onFocus={() => !form.phone && setForm({ ...form, phone: '+380 ' })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    phone: formatPhone(e.target.value),
+                  })
+                }
+                onFocus={() =>
+                  !form.phone &&
+                  setForm({
+                    ...form,
+                    phone: '+380 ',
+                  })
+                }
                 required
                 maxLength={20}
                 placeholder="+380 67 123 45 67"
                 autoComplete="tel"
               />
-              <small className="hint">На цей номер прийде SMS від Нової пошти.</small>
+              <small className="hint">{t('На цей номер прийде SMS від Нової пошти.')}</small>
             </label>
           </fieldset>
 
           <fieldset className="co-block">
-            <legend>Спосіб доставки</legend>
-            <div className="co-methods" role="radiogroup" aria-label="Спосіб доставки">
+            <legend>{t('Спосіб доставки')}</legend>
+            <div className="co-methods" role="radiogroup" aria-label={t('Спосіб доставки')}>
               {METHODS.map((m) => {
                 const Icon = m.icon;
                 return (
@@ -158,35 +221,83 @@ export default function Checkout({ total, onClose }) {
                     role="radio"
                     aria-checked={d.method === m.key}
                     className={`co-method ${d.method === m.key ? 'on' : ''}`}
-                    onClick={() => setDel({ method: m.key, point: '', pointRef: '' })}
+                    onClick={() =>
+                      setDel({
+                        method: m.key,
+                        point: '',
+                        pointRef: '',
+                      })
+                    }
                   >
                     <Icon size={20} strokeWidth={1.6} />
-                    <b>{m.label}</b>
-                    <span>{m.sub}</span>
+                    <b>{t(m.label)}</b>
+                    <span>{t(m.sub)}</span>
                   </button>
                 );
               })}
             </div>
 
-            <CityInput value={d.city} onChange={(city, cityRef = '') => setDel({ city, cityRef, point: '', pointRef: '' })} />
+            <CityInput
+              value={d.city}
+              onChange={(city, cityRef = '') =>
+                setDel({
+                  city,
+                  cityRef,
+                  point: '',
+                  pointRef: '',
+                })
+              }
+            />
 
             {d.method === 'courier' ? (
               <>
                 <label className="field">
-                  <span>Вулиця *</span>
-                  <input value={d.street} onChange={(e) => setDel({ street: e.target.value })} required maxLength={120} placeholder="вул. Хрещатик" autoComplete="address-line1" />
+                  <span>{t('Вулиця *')}</span>
+                  <input
+                    value={d.street}
+                    onChange={(e) =>
+                      setDel({
+                        street: e.target.value,
+                      })
+                    }
+                    required
+                    maxLength={120}
+                    placeholder={t('вул. Хрещатик')}
+                    autoComplete="address-line1"
+                  />
                 </label>
                 <div className="co-row">
                   <label className="field">
-                    <span>Будинок *</span>
-                    <input value={d.house} onChange={(e) => setDel({ house: e.target.value })} required maxLength={20} placeholder="22" />
+                    <span>{t('Будинок *')}</span>
+                    <input
+                      value={d.house}
+                      onChange={(e) =>
+                        setDel({
+                          house: e.target.value,
+                        })
+                      }
+                      required
+                      maxLength={20}
+                      placeholder="22"
+                    />
                   </label>
                   <label className="field">
-                    <span>Квартира</span>
-                    <input value={d.apartment} onChange={(e) => setDel({ apartment: e.target.value })} maxLength={20} placeholder="15" />
+                    <span>{t('Квартира')}</span>
+                    <input
+                      value={d.apartment}
+                      onChange={(e) =>
+                        setDel({
+                          apartment: e.target.value,
+                        })
+                      }
+                      maxLength={20}
+                      placeholder="15"
+                    />
                   </label>
                 </div>
-                <small className="hint">Кур’єр зателефонує перед приїздом. Вкажіть під’їзд і поверх у коментарі, якщо потрібно.</small>
+                <small className="hint">
+                  {t('Кур’єр зателефонує перед приїздом. Вкажіть під’їзд і поверх у коментарі, якщо потрібно.')}
+                </small>
               </>
             ) : (
               <PointInput
@@ -197,19 +308,29 @@ export default function Checkout({ total, onClose }) {
                 cityRef={d.cityRef}
                 disabled={!d.city}
                 value={d.point}
-                onChange={(point, pointRef = '') => setDel({ point, pointRef })}
+                onChange={(point, pointRef = '') =>
+                  setDel({
+                    point,
+                    pointRef,
+                  })
+                }
               />
             )}
           </fieldset>
 
           <label className="field">
-            <span>Коментар</span>
+            <span>{t('Коментар')}</span>
             <textarea
               rows={2}
               value={form.comment}
-              onChange={(e) => setForm({ ...form, comment: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  comment: e.target.value,
+                })
+              }
               maxLength={500}
-              placeholder="Зручний час дзвінка, побажання до пакування…"
+              placeholder={t('Зручний час дзвінка, побажання до пакування…')}
             />
           </label>
 
@@ -219,12 +340,12 @@ export default function Checkout({ total, onClose }) {
             </p>
           )}
           <div className="modal-total">
-            <span>До сплати (без доставки)</span>
+            <span>{t('До сплати (без доставки)')}</span>
             <b>{money(total)}</b>
           </div>
-          <p className="hint">Вартість доставки — за тарифами перевізника, оплачується при отриманні.</p>
+          <p className="hint">{t('Вартість доставки — за тарифами перевізника, оплачується при отриманні.')}</p>
           <button type="submit" className="btn btn-gold btn-lg btn-block" disabled={state.busy}>
-            {state.busy ? 'Надсилаємо…' : 'Підтвердити замовлення'}
+            {state.busy ? t('Надсилаємо…') : t('Підтвердити замовлення')}
           </button>
         </form>
       </div>
@@ -237,13 +358,25 @@ export default function Checkout({ total, onClose }) {
 function useDebounced(value, ms) {
   const [v, setV] = useState(value);
   useEffect(() => {
-    const t = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setV(value), ms);
+    return () => clearTimeout(timer);
   }, [value, ms]);
   return v;
 }
-
-function Suggest({ label, value, onType, onPick, load, render, placeholder, hint, required, disabled, minChars = 2, autoComplete = 'off' }) {
+function Suggest({
+  label,
+  value,
+  onType,
+  onPick,
+  load,
+  render,
+  placeholder,
+  hint,
+  required,
+  disabled,
+  minChars = 2,
+  autoComplete = 'off',
+}) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -254,7 +387,6 @@ function Suggest({ label, value, onType, onPick, load, render, placeholder, hint
   const reqId = useRef(0);
   const loadRef = useRef(load);
   loadRef.current = load;
-
   useEffect(() => {
     if (!open || q.trim().length < minChars) {
       setItems([]);
@@ -268,19 +400,16 @@ function Suggest({ label, value, onType, onPick, load, render, placeholder, hint
       .catch(() => my === reqId.current && setItems([]))
       .finally(() => my === reqId.current && setBusy(false));
   }, [q, open, minChars]);
-
   useEffect(() => {
     const onDoc = (e) => !box.current?.contains(e.target) && setOpen(false);
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
-
   const pick = (it) => {
     onPick(it);
     setOpen(false);
     setActive(-1);
   };
-
   const onKey = (e) => {
     if (!open || !items.length) return;
     if (e.key === 'ArrowDown') {
@@ -294,69 +423,66 @@ function Suggest({ label, value, onType, onPick, load, render, placeholder, hint
       pick(items[active]);
     }
   };
-
   return (
     <div className="field suggest" ref={box}>
       <label htmlFor={id}>
         <span>{label}</span>
       </label>
       <div className="suggest-box">
-      <input
-        id={id}
-        value={value}
-        onChange={(e) => {
-          onType(e.target.value);
-          setOpen(true);
-          setActive(-1);
-        }}
-        onFocus={() => setOpen(true)}
-        onKeyDown={onKey}
-        placeholder={placeholder}
-        required={required}
-        disabled={disabled}
-        maxLength={200}
-        autoComplete={autoComplete}
-        role="combobox"
-        aria-expanded={open && items.length > 0}
-        aria-controls={`${id}-list`}
-        aria-autocomplete="list"
-      />
-      {open && (items.length > 0 || busy) && (
-        <ul className="suggest-list" id={`${id}-list`} role="listbox">
-          {busy && items.length === 0 && <li className="suggest-empty">Шукаємо…</li>}
-          {items.map((it, i) => (
-            <li
-              key={it.ref || it.name + i}
-              role="option"
-              aria-selected={i === active}
-              className={i === active ? 'on' : ''}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                pick(it);
-              }}
-            >
-              {render(it)}
-            </li>
-          ))}
-        </ul>
-      )}
+        <input
+          id={id}
+          value={value}
+          onChange={(e) => {
+            onType(e.target.value);
+            setOpen(true);
+            setActive(-1);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={onKey}
+          placeholder={placeholder}
+          required={required}
+          disabled={disabled}
+          maxLength={200}
+          autoComplete={autoComplete}
+          role="combobox"
+          aria-expanded={open && items.length > 0}
+          aria-controls={`${id}-list`}
+          aria-autocomplete="list"
+        />
+        {open && (items.length > 0 || busy) && (
+          <ul className="suggest-list" id={`${id}-list`} role="listbox">
+            {busy && items.length === 0 && <li className="suggest-empty">{t('Шукаємо…')}</li>}
+            {items.map((it, i) => (
+              <li
+                key={it.ref || it.name + i}
+                role="option"
+                aria-selected={i === active}
+                className={i === active ? 'on' : ''}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  pick(it);
+                }}
+              >
+                {render(it)}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       {hint && <small className="hint">{hint}</small>}
     </div>
   );
 }
-
 const getJson = (url) => fetch(url).then((r) => (r.ok ? r.json() : []));
-
 function CityInput({ value, onChange }) {
   const load = (q) => getJson(`/api/delivery/cities?q=${encodeURIComponent(q)}`);
   return (
     <Suggest
-      label="Місто *"
+      label={t('Місто *')}
       value={value}
       required
-      placeholder="Почніть вводити: Київ, Львів…"
-      hint="Оберіть місто зі списку підказок або впишіть населений пункт повністю."
+      placeholder={t('Почніть вводити: Київ, Львів…')}
+      hint={t('Оберіть місто зі списку підказок або впишіть населений пункт повністю.')}
       autoComplete="address-level2"
       onType={(v) => onChange(v, '')}
       onPick={(c) => onChange(c.name, c.ref)}
@@ -373,7 +499,6 @@ function CityInput({ value, onChange }) {
     />
   );
 }
-
 function PointInput({ kind, label, np, cityRef, disabled, value, onChange }) {
   const load = (q) => getJson(`/api/delivery/points?kind=${kind}&cityRef=${encodeURIComponent(cityRef)}&q=${encodeURIComponent(q)}`);
   if (!np) {
@@ -386,15 +511,15 @@ function PointInput({ kind, label, np, cityRef, disabled, value, onChange }) {
           required
           disabled={disabled}
           maxLength={200}
-          placeholder={kind === 'postomat' ? 'Номер поштомату, наприклад 5521' : 'Номер відділення, наприклад 12'}
+          placeholder={kind === 'postomat' ? t('Номер поштомату, наприклад 5521') : t('Номер відділення, наприклад 12')}
         />
         <small className="hint">
           <Info size={12} />{' '}
           {disabled
-            ? 'Спочатку вкажіть місто.'
+            ? t('Спочатку вкажіть місто.')
             : kind === 'postomat'
-              ? 'Номер поштомату є в застосунку Нової пошти або на сайті novaposhta.ua.'
-              : 'Вкажіть номер або адресу відділення Нової пошти.'}
+              ? t('Номер поштомату є в застосунку Нової пошти або на сайті novaposhta.ua.')
+              : t('Вкажіть номер або адресу відділення Нової пошти.')}
         </small>
       </label>
     );
@@ -405,8 +530,12 @@ function PointInput({ kind, label, np, cityRef, disabled, value, onChange }) {
       value={value}
       required
       minChars={0}
-      placeholder={kind === 'postomat' ? 'Номер або вулиця поштомату' : 'Номер або вулиця відділення'}
-      hint={kind === 'postomat' ? 'Поштомати приймають посилки до 30 кг і видають їх цілодобово.' : 'Почніть вводити номер, наприклад «12», або назву вулиці.'}
+      placeholder={kind === 'postomat' ? t('Номер або вулиця поштомату') : t('Номер або вулиця відділення')}
+      hint={
+        kind === 'postomat'
+          ? t('Поштомати приймають посилки до 30 кг і видають їх цілодобово.')
+          : t('Почніть вводити номер, наприклад «12», або назву вулиці.')
+      }
       onType={(v) => onChange(v, '')}
       onPick={(w) => onChange(w.name, w.ref)}
       load={load}

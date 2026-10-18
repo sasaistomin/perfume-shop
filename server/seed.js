@@ -1,9 +1,10 @@
 // Стартові дані магазину. Використовуються лише при першому запуску, коли ще немає server/data/db.json.
-// Ціни для об'ємів, яких немає в макеті, та імена парфумерів — умовні: змініть їх в адмінці.
+// Ціни для об'ємів, яких немає в макеті, умовні: змініть їх в адмінці.
 
 const note = (name, type) => ({ name, type, image: '' });
 const vol = (ml, price, stock) => ({ ml, price, stock });
-const perfumer = (name, title, bio) => ({ name, title, bio, photo: '' });
+// Парфумера можна вказати в адмінці (ім’я, посада, біографія, фото). За замовчуванням блок не показується.
+const perfumer = () => ({ name: '', title: '', bio: '', photo: '' });
 
 const PRODUCTS = [
   {
@@ -15,6 +16,7 @@ const PRODUCTS = [
     category: 'Квіткова композиція',
     tags: ['Деревний', 'Квітковий', 'Унісекс'],
     description: 'Сучасний, спокійний, з нотами шкіри та деревини.',
+    ru: { name: 'Ирис', description: 'Современный, спокойный, с нотами кожи и древесины.', category: '' },
     isNew: false,
     featured: true,
     color: '#f5f0ea',
@@ -26,11 +28,7 @@ const PRODUCTS = [
       heart: [note('Ірис', 'flower'), note('Фіалка', 'flower')],
       base: [note('Шкіра', 'leather'), note('Кедр', 'wood'), note('Білий мускус', 'musk')],
     },
-    perfumer: perfumer(
-      'Марта Сенчук',
-      'Парфумер, Київ',
-      'Створила Ірис як тиху розмову між холодною пудровою квіткою та теплою шкірою. Працює з натуральними інгредієнтами та довго витримує композиції перед випуском.'
-    ),
+    perfumer: perfumer(),
   },
   {
     id: 'amyris-masculino',
@@ -41,6 +39,7 @@ const PRODUCTS = [
     category: 'Деревна композиція',
     tags: ['Деревний', 'Пряний', 'Чоловічий'],
     description: 'Деревний, пряний, з нотами амірісу та мускусу.',
+    ru: { name: 'Amyris Masculino', description: 'Древесный, пряный, с нотами амириса и мускуса.', category: '' },
     isNew: false,
     featured: false,
     color: '#3d2314',
@@ -52,11 +51,7 @@ const PRODUCTS = [
       heart: [note('Аміріс', 'wood'), note('Шафран', 'spice')],
       base: [note('Мускус', 'musk'), note('Сандал', 'wood')],
     },
-    perfumer: perfumer(
-      'Артем Ліщинський',
-      'Парфумер, Львів',
-      'Любить дерево в усіх його проявах: від сухого аміріса до димного сандалу. Цей аромат — його спроба передати тепло старої майстерні.'
-    ),
+    perfumer: perfumer(),
   },
   {
     id: 'femme-doree',
@@ -67,6 +62,7 @@ const PRODUCTS = [
     category: 'Квіткова композиція',
     tags: ['Квітковий', 'Ванільний', 'Жіночий'],
     description: 'Сонячний квітковий аромат із нотами ванілі та жасмину.',
+    ru: { name: 'Femme Dorée', description: 'Солнечный цветочный аромат с нотами ванили и жасмина.', category: '' },
     isNew: false,
     featured: false,
     color: '#f5efe8',
@@ -78,11 +74,7 @@ const PRODUCTS = [
       heart: [note('Жасмин', 'flower'), note('Півонія', 'flower')],
       base: [note('Ваніль', 'sweet'), note('Мускус', 'musk')],
     },
-    perfumer: perfumer(
-      'Софія Дорош',
-      'Парфумер, Одеса',
-      'Шукала в запаху ту саму хвилину, коли ранкове сонце впирається в штору. Золото, жасмин і трохи теплої ванілі.'
-    ),
+    perfumer: perfumer(),
   },
   {
     id: 'noir-oud',
@@ -93,6 +85,7 @@ const PRODUCTS = [
     category: 'Вечірня композиція',
     tags: ['Деревний', 'Шкіряний', 'Пряний'],
     description: 'Глибокий, вечірній, з нотами пачулі та шкіри.',
+    ru: { name: 'Noir Oud', description: 'Глубокий, вечерний, с нотами пачули и кожи.', category: '' },
     isNew: false,
     featured: false,
     color: '#2c1a0e',
@@ -104,11 +97,7 @@ const PRODUCTS = [
       heart: [note('Уд', 'wood'), note('Троянда', 'flower')],
       base: [note('Пачулі', 'herb'), note('Шкіра', 'leather'), note('Амбра', 'amber')],
     },
-    perfumer: perfumer(
-      'Іван Кравець',
-      'Парфумер, Харків',
-      'Вечірні аромати — його головна тема. Noir Oud задуманий як щільна темна тканина, яка розкривається повільно.'
-    ),
+    perfumer: perfumer(),
   },
   {
     id: 'cristobal',
@@ -119,6 +108,7 @@ const PRODUCTS = [
     category: 'Шкіряна композиція',
     tags: ['Шкіряний', 'Деревний', 'Пряний'],
     description: 'Шкіряний, деревний, з нотами шкіри та тютюну.',
+    ru: { name: 'Cristobal', description: 'Кожаный, древесный, с нотами кожи и табака.', category: '' },
     isNew: true,
     featured: false,
     color: '#ede8e1',
@@ -130,11 +120,7 @@ const PRODUCTS = [
       heart: [note('Тютюн', 'herb'), note('Шкіра', 'leather')],
       base: [note('Ветивер', 'herb'), note('Кедр', 'wood'), note('Тонка боби', 'sweet')],
     },
-    perfumer: perfumer(
-      'Артем Ліщинський',
-      'Парфумер, Львів',
-      'Cristobal — про запах бібліотеки, де поруч лежать шкіряні палітурки та люлька з вишневим тютюном.'
-    ),
+    perfumer: perfumer(),
   },
   {
     id: 'aria-de-narciso',
@@ -145,6 +131,7 @@ const PRODUCTS = [
     category: 'Квіткова композиція',
     tags: ['Квітковий', 'Жіночий'],
     description: 'Квітковий, легкий, з нотами нарцису та білих квітів.',
+    ru: { name: 'Aria de Narciso', description: 'Цветочный, лёгкий, с нотами нарцисса и белых цветов.', category: '' },
     isNew: false,
     featured: true,
     color: '#fafaf8',
@@ -156,11 +143,7 @@ const PRODUCTS = [
       heart: [note('Нарцис', 'flower'), note('Тубероза', 'flower'), note('Жасмин', 'flower')],
       base: [note('Білий мускус', 'musk'), note('Кедр', 'wood')],
     },
-    perfumer: perfumer(
-      'Олена Мартинюк',
-      'Парфумер, Дніпро',
-      'Аромат про весняний сад після дощу: холодна зелень, білі квіти та чистий мускус.'
-    ),
+    perfumer: perfumer(),
   },
   {
     id: 'rose-de-nuit',
@@ -171,6 +154,7 @@ const PRODUCTS = [
     category: 'Квіткова композиція',
     tags: ['Квітковий', 'Шкіряний'],
     description: 'Трояндовий, вечірній, з нотами шкіри та ванілі.',
+    ru: { name: 'Rose de Nuit', description: 'Розовый, вечерний, с нотами кожи и ванили.', category: '' },
     isNew: true,
     featured: true,
     color: '#f5efe8',
@@ -182,38 +166,15 @@ const PRODUCTS = [
       heart: [note('Троянда', 'flower'), note('Півонія', 'flower')],
       base: [note('Шкіра', 'leather'), note('Ваніль', 'sweet'), note('Пачулі', 'herb')],
     },
-    perfumer: perfumer(
-      'Марта Сенчук',
-      'Парфумер, Київ',
-      'Темна троянда без цукрової солодкості: пелюстки, трохи шкіри та м’яка ваніль на дні.'
-    ),
+    perfumer: perfumer(),
   },
 ];
 
-const REVIEWS = [
-  {
-    id: 'r_seed1',
-    productId: 'iris',
-    name: 'Ліза',
-    rating: 5,
-    text: 'Очікувала ще один трояндовий аромат — але нічого подібного! Вона тут зовсім не така, як в більшості парфумів.\n100% унісекс\nПриємно здивував! Дуже гарний аромат!',
-    ordered: 'DeLas Ірис 1мл',
-    verified: true,
-    approved: true,
-    createdAt: '2025-12-21T10:00:00.000Z',
-  },
-  {
-    id: 'r_seed2',
-    productId: 'iris',
-    name: 'Наталія Коваль',
-    rating: 4,
-    text: 'Гарний аромат троянди з перцем, стійкість декілька годин.',
-    ordered: 'DeLas Ірис 2мл',
-    verified: true,
-    approved: true,
-    createdAt: '2025-11-18T10:00:00.000Z',
-  },
-];
+// Відгуки з’являються лише від справжніх покупців (через форму на сторінці товару, після модерації в адмінці).
+// Демо-відгуки та вигадані парфумери з першої версії сайту видаляються з бази автоматично (див. cleanupLegacy у store.js).
+export const LEGACY_REVIEW_IDS = ['r_seed1', 'r_seed2'];
+export const LEGACY_PERFUMERS = ['Марта Сенчук', 'Артем Ліщинський', 'Софія Дорош', 'Іван Кравець', 'Олена Мартинюк'];
+export const SEED_RU = Object.fromEntries(PRODUCTS.map((p) => [p.id, p.ru]));
 
 export function seedDb() {
   const base = Date.now();
@@ -226,7 +187,7 @@ export function seedDb() {
       createdAt: new Date(base - i * 1000).toISOString(),
     })),
     orders: [],
-    reviews: REVIEWS.map((r) => ({ ...r })),
+    reviews: [],
     subscribers: [],
     promoCodes: [{ code: 'DELAS10', percent: 10, active: true }],
   };

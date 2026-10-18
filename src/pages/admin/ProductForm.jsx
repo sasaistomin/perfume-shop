@@ -19,7 +19,8 @@ const EMPTY = {
   images: [],
   volumes: [{ ml: 2, price: 300, stock: 10 }],
   notes: { top: [], heart: [], base: [] },
-  perfumer: { name: '', title: '', bio: '', photo: '' },
+  perfumer: { name: '', title: '', bio: '', photo: '', titleRu: '', bioRu: '' },
+  ru: { name: '', description: '', category: '' },
 };
 
 const readAsDataUrl = (file) =>
@@ -55,12 +56,14 @@ export default function ProductForm({ api, guard, initial, onDone, onCancel }) {
     const base = structuredClone(initial || EMPTY);
     base.notes = { top: [], heart: [], base: [], ...(base.notes || {}) };
     base.perfumer = { ...EMPTY.perfumer, ...(base.perfumer || {}) };
+    base.ru = { ...EMPTY.ru, ...(base.ru || {}) };
     return base;
   });
   const [tagsText, setTagsText] = useState((p.tags || []).join(', '));
   const [state, setState] = useState({ busy: false, error: '' });
 
   const set = (k, v) => setP((x) => ({ ...x, [k]: v }));
+  const setRu = (k, v) => setP((x) => ({ ...x, ru: { ...x.ru, [k]: v } }));
   const setPerf = (k, v) => setP((x) => ({ ...x, perfumer: { ...x.perfumer, [k]: v } }));
 
   const upload = async (file) => {
@@ -152,6 +155,24 @@ export default function ProductForm({ api, guard, initial, onDone, onCancel }) {
             <span>Опис</span>
             <textarea rows={3} value={p.description} onChange={(e) => set('description', e.target.value)} maxLength={2000} />
           </label>
+          <details className="ru-block" open={!p.ru.description}>
+            <summary>Російська версія сайту (/ru)</summary>
+            <p className="muted small">Якщо поле порожнє, на російській версії показується український текст.</p>
+            <div className="grid2">
+              <label className="field">
+                <span>Назва (рос.)</span>
+                <input value={p.ru.name} onChange={(e) => setRu('name', e.target.value)} maxLength={120} placeholder={p.name} />
+              </label>
+              <label className="field">
+                <span>Категорія (рос.)</span>
+                <input value={p.ru.category} onChange={(e) => setRu('category', e.target.value)} maxLength={60} placeholder="Цветочная композиция" />
+              </label>
+            </div>
+            <label className="field">
+              <span>Опис (рос.)</span>
+              <textarea rows={3} value={p.ru.description} onChange={(e) => setRu('description', e.target.value)} maxLength={2000} />
+            </label>
+          </details>
           <div className="checks">
             <label>
               <input type="checkbox" checked={p.visible} onChange={(e) => set('visible', e.target.checked)} /> Показувати на сайті
@@ -247,6 +268,7 @@ export default function ProductForm({ api, guard, initial, onDone, onCancel }) {
                     <NoteImage note={n} size={48} />
                     <div className="note-fields">
                       <input value={n.name} onChange={(e) => setNote(g.key, i, 'name', e.target.value)} placeholder="Назва ноти" maxLength={40} required />
+                      <input value={n.nameRu || ''} onChange={(e) => setNote(g.key, i, 'nameRu', e.target.value)} placeholder="Назва рос. (необов’язково)" maxLength={40} />
                       <select value={n.type} onChange={(e) => setNote(g.key, i, 'type', e.target.value)}>
                         {Object.entries(NOTE_TYPE_LABEL).map(([k, v]) => (
                           <option key={k} value={k}>
@@ -307,6 +329,14 @@ export default function ProductForm({ api, guard, initial, onDone, onCancel }) {
               <label className="field span2">
                 <span>Про парфумера та історія аромату</span>
                 <textarea rows={3} value={p.perfumer.bio} onChange={(e) => setPerf('bio', e.target.value)} maxLength={1000} />
+              </label>
+              <label className="field">
+                <span>Підпис (рос.)</span>
+                <input value={p.perfumer.titleRu} onChange={(e) => setPerf('titleRu', e.target.value)} maxLength={80} placeholder="Парфюмер, Грас" />
+              </label>
+              <label className="field span2">
+                <span>Про парфумера (рос.)</span>
+                <textarea rows={3} value={p.perfumer.bioRu} onChange={(e) => setPerf('bioRu', e.target.value)} maxLength={1000} />
               </label>
               <div className="note-img-row">
                 <UploadButton

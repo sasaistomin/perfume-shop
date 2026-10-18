@@ -20,11 +20,9 @@ app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d', index: false, fal
 
 // зібраний фронтенд (після npm run build)
 if (fs.existsSync(DIST_DIR)) {
-  app.use(express.static(DIST_DIR));
-  app.get('*', (req, res) => {
-    if (path.extname(req.path)) return res.status(404).end(); // відсутні файли — 404, а не сторінка магазину
-    res.sendFile(path.join(DIST_DIR, 'index.html'));
-  });
+  // сторінки (/, /catalog, /product/…) формує server/seo.js; тут — лише файли: скрипти, стилі, фото
+  app.use(express.static(DIST_DIR, { index: false }));
+  app.use((req, res, next) => (path.extname(req.path) ? res.status(404).end() : next())); // відсутні файли — 404
 }
 
 app.use(errorHandler);

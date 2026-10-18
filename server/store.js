@@ -7,7 +7,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { seedDb } from './seed.js';
+import { LEGACY_PERFUMERS, LEGACY_REVIEW_IDS, SEED_RU, seedDb } from './seed.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -34,7 +34,20 @@ function normalize(raw) {
   raw.subscribers ??= [];
   raw.promoCodes ??= [];
   raw.orders ??= [];
+  cleanupLegacy(raw);
   return raw;
+}
+
+// Прибирає демо-відгуки та вигаданих парфумерів першої версії і додає російські тексти стартовим товарам.
+// Безпечно викликати багато разів; власні дані з адмінки не чіпає.
+function cleanupLegacy(db) {
+  db.reviews = db.reviews.filter((r) => !LEGACY_REVIEW_IDS.includes(r.id));
+  for (const p of db.products || []) {
+    const pf = p.perfumer;
+    if (pf && LEGACY_PERFUMERS.includes(pf.name) && !pf.photo) p.perfumer = { name: '', title: '', bio: '', photo: '' };
+    const ru = SEED_RU[p.id];
+    if (ru && !p.ru) p.ru = { ...ru };
+  }
 }
 
 // Перехід з першої версії сайту: товари беремо нові, замовлення переносимо.
@@ -175,13 +188,22 @@ async function supa(pathAndQuery, { method = 'GET', body, headers } = {}) {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = { message: `${res.status} ${text.slice(0, 120)}` };
+  }
   if (!res.ok) {
     const msg = data?.message || data?.error || res.status;
     if (data?.code === '42P01' || data?.code === 'PGRST205' || /relation .* does not exist|Could not find the table/i.test(String(msg))) {
       throw Object.assign(new Error('У Supabase немає таблиці kv. Виконайте SQL з README (розділ «Supabase»).'), { expose: true });
     }
-    throw new Error(`Supabase: ${msg}`);
+    // Зрозуміла підказка в адмінці замість «Внутрішня помилка сервера» (секретів у тексті немає)
+    let hint = '';
+    if (res.status === 401 || /api key|jwt|unauthori/i.test(String(msg))) hint = ' — перевірте SUPABASE_SERVICE_ROLE_KEY у Vercel (потрібен secret / service_role ключ, не publishable / anon).';
+    else if (/row-level security|permission denied/i.test(String(msg))) hint = ' — використано не секретний ключ. Вставте secret (sb_secret_…) або service_role ключ.';
+    throw Object.assign(new Error(`Supabase: ${msg}${hint}`), { expose: true });
   }
   return data;
 }
