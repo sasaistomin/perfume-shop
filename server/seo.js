@@ -290,7 +290,7 @@ async function pageHandler(req, res, next) {
     const html = render(tpl, route, meta, extra);
     noindexIfForeignHost(req, res);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', status === 200 && !PRIVATE.has(route.page) ? 'public, max-age=0, s-maxage=60, stale-while-revalidate=600' : 'no-store');
+    res.setHeader('Cache-Control', status === 200 && !PRIVATE.has(route.page) ? 'public, max-age=0, must-revalidate' : 'no-store');
     res.setHeader('Vary', 'Host');
     res.status(status).send(html);
   } catch (e) {
