@@ -1121,3 +1121,14 @@ input[type='checkbox'] {
     opacity: 1;
   }
 }
+
+/* фото товару, яке не підходить під рамку: показуємо цілком на білому тлі */
+img.cover.img-fit {
+  object-fit: contain;
+  background: #fff;
+  padding: 4%;
+  box-sizing: border-box;
+}
+.pcard:hover .pcard-media img.img-fit {
+  transform: none;
+}

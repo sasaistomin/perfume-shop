@@ -3,6 +3,9 @@ import { ArrowDown, ArrowUp, Plus, Trash2, Upload, X } from 'lucide-react';
 import { Img, NoteImage, ProductImg } from '../../components/Art.jsx';
 import { NOTE_GROUPS, NOTE_TYPE_LABEL } from '../../lib/format.js';
 
+// Числа можна вводити з пробілами («1 265») — зайві символи прибираються.
+const digitsOnly = (v) => String(v).replace(/\D/g, '').slice(0, 7);
+
 const EMPTY = {
   name: '',
   brand: 'DeLas',
@@ -207,9 +210,9 @@ export default function ProductForm({ api, guard, initial, onDone, onCancel }) {
             </div>
             {p.volumes.map((v, i) => (
               <div key={i} className="vol-row">
-                <input type="number" min={1} max={1000} value={v.ml} onChange={(e) => setVol(i, 'ml', e.target.value)} required aria-label="мл" />
-                <input type="number" min={1} value={v.price} onChange={(e) => setVol(i, 'price', e.target.value)} required aria-label="Ціна" />
-                <input type="number" min={0} value={v.stock} onChange={(e) => setVol(i, 'stock', e.target.value)} required aria-label="Склад" />
+                <input type="text" inputMode="numeric" pattern="[0-9 ]*" value={v.ml} onChange={(e) => setVol(i, 'ml', digitsOnly(e.target.value))} required aria-label="мл" />
+                <input type="text" inputMode="numeric" pattern="[0-9 ]*" value={v.price} onChange={(e) => setVol(i, 'price', digitsOnly(e.target.value))} required aria-label="Ціна" />
+                <input type="text" inputMode="numeric" pattern="[0-9 ]*" value={v.stock} onChange={(e) => setVol(i, 'stock', digitsOnly(e.target.value))} required aria-label="Склад" />
                 <button type="button" className="icon-btn" disabled={p.volumes.length < 2} onClick={() => set('volumes', p.volumes.filter((_, j) => j !== i))} aria-label="Прибрати об’єм">
                   <Trash2 size={14} />
                 </button>

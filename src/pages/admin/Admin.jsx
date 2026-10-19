@@ -8,6 +8,9 @@ import { Stars } from '../../components/ui.jsx';
 import ProductForm from './ProductForm.jsx';
 import Stats from './Stats.jsx';
 
+// Числа можна вводити з пробілами («1 265») — зайві символи прибираються.
+const digitsOnly = (v) => String(v).replace(/\D/g, '').slice(0, 7);
+
 export default function Admin() {
   // null — перевіряємо, true — увійшли, false — потрібен вхід
   const [authed, setAuthed] = useState(null);
@@ -709,7 +712,7 @@ function Promos({ api, guard, list, reload }) {
         </label>
         <label className="field">
           <span>Знижка, %</span>
-          <input type="number" min={1} max={90} value={form.percent} onChange={(e) => setForm({ ...form, percent: e.target.value })} required />
+          <input type="text" inputMode="numeric" value={form.percent} onChange={(e) => setForm({ ...form, percent: digitsOnly(e.target.value) })} required />
         </label>
         <button className="btn btn-dark btn-sm">
           <Plus size={14} /> Створити

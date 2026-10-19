@@ -54,14 +54,28 @@ export function Img({ src, alt = '', className = '', fallback = null, ...rest })
   return <img src={src} alt={alt} className={className} loading="lazy" decoding="async" onError={() => setFailed(true)} {...rest} />;
 }
 
+// Якщо пропорції фото сильно відрізняються від рамки (вузький флакон, вирізане фото на білому тлі),
+// показуємо фото повністю, а не обрізаємо й не розтягуємо його.
+function fitMode(img) {
+  const box = img.parentElement?.getBoundingClientRect();
+  if (!box?.width || !box?.height || !img.naturalWidth || !img.naturalHeight) return '';
+  const photo = img.naturalWidth / img.naturalHeight;
+  const frame = box.width / box.height;
+  const ratio = photo > frame ? photo / frame : frame / photo;
+  const small = img.naturalWidth < box.width * 0.9 || img.naturalHeight < box.height * 0.9;
+  return ratio > 1.25 || (small && ratio > 1.08) ? 'img-fit' : '';
+}
+
 export function ProductImg({ product, index = 0, dark, className = '' }) {
   const src = product?.images?.[index];
+  const [fit, setFit] = useState('');
   return (
     <Img
       key={src}
       src={src}
       alt={pn(product)}
-      className={`cover ${className}`}
+      onLoad={(e) => setFit(fitMode(e.currentTarget))}
+      className={`cover ${fit} ${className}`}
       fallback={
         <Bottle
           name={product?.name}
