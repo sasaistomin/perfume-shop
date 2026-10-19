@@ -74,7 +74,7 @@ const TYPE_RU = { 'Парфумована вода': 'Парфюмированн
 export function productMeta(p, lang = 'uk') {
   const ru = lang === 'ru';
   const name = (ru && p.ru?.name) || p.name;
-  const type = ru ? TYPE_RU[p.type] || p.type : p.type;
+  const type = ru ? p.ru?.terms?.[p.type] || TYPE_RU[p.type] || p.type : p.type;
   const prices = (p.volumes || []).map((v) => v.price).filter((x) => x > 0);
   const from = prices.length ? Math.min(...prices) : 0;
   const price = from ? (ru ? `, цена от ${from} грн` : `, ціна від ${from} грн`) : '';

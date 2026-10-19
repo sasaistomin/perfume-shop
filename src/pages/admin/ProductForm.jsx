@@ -158,9 +158,9 @@ export default function ProductForm({ api, guard, initial, onDone, onCancel }) {
             <span>Опис</span>
             <textarea rows={3} value={p.description} onChange={(e) => set('description', e.target.value)} maxLength={2000} />
           </label>
-          <details className="ru-block" open={!p.ru.description}>
-            <summary>Російська версія сайту (/ru)</summary>
-            <p className="muted small">Якщо поле порожнє, на російській версії показується український текст.</p>
+          <details className="ru-block">
+            <summary>Російська версія сайту (/ru) — перекладається автоматично</summary>
+            <p className="muted small">Після збереження назва, опис, категорія, ноти, теги та текст про парфумера перекладаються самі. Тут можна виправити переклад вручну — ваш варіант не буде перезаписано. Щоб перекласти поле заново, очистіть його.</p>
             <div className="grid2">
               <label className="field">
                 <span>Назва (рос.)</span>
@@ -271,7 +271,7 @@ export default function ProductForm({ api, guard, initial, onDone, onCancel }) {
                     <NoteImage note={n} size={48} />
                     <div className="note-fields">
                       <input value={n.name} onChange={(e) => setNote(g.key, i, 'name', e.target.value)} placeholder="Назва ноти" maxLength={40} required />
-                      <input value={n.nameRu || ''} onChange={(e) => setNote(g.key, i, 'nameRu', e.target.value)} placeholder="Назва рос. (необов’язково)" maxLength={40} />
+                      <input value={n.nameRu || ''} onChange={(e) => setNote(g.key, i, 'nameRu', e.target.value)} placeholder="рос. — автоматично" maxLength={40} />
                       <select value={n.type} onChange={(e) => setNote(g.key, i, 'type', e.target.value)}>
                         {Object.entries(NOTE_TYPE_LABEL).map(([k, v]) => (
                           <option key={k} value={k}>

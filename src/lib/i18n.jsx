@@ -7,6 +7,14 @@ import { pageMeta } from './seo-meta.js';
 
 export const LANGS = ['uk', 'ru'];
 let current = 'uk';
+// Переклади з даних товарів (теги, тип, ноти), які сервер переклав автоматично.
+const EXTRA = {};
+export function registerProducts(list) {
+  for (const p of [].concat(list || [])) {
+    Object.assign(EXTRA, p?.ru?.terms || {});
+    for (const g of ['top', 'heart', 'base']) for (const n of p?.notes?.[g] || []) if (n.nameRu && !EXTRA[n.name]) EXTRA[n.name] = n.nameRu;
+  }
+}
 
 export const getLang = () => current;
 export const langFromPath = (pathname) => (/^\/ru(\/|$)/.test(pathname) ? 'ru' : 'uk');
@@ -15,7 +23,7 @@ export const stripLang = (pathname) => pathname.replace(/^\/ru(?=\/|$)/, '') || 
 // Переклад рядка. {0}, {1}… — місця для значень.
 export function t(text, ...args) {
   if (typeof text !== 'string') return text;
-  let s = current === 'ru' ? (RU[text] ?? fromPattern(text)) : text;
+  let s = current === 'ru' ? (RU[text] ?? EXTRA[text] ?? fromPattern(text)) : text;
   if (args.length) s = s.replace(/\{(\d+)\}/g, (m, i) => (args[i] === undefined ? m : String(args[i])));
   return s;
 }

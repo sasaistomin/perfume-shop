@@ -5,6 +5,7 @@ import { cleanProduct, digitsCount, isEmail, str, toInt } from './validate.js';
 import { cleanDelivery, deliveryText, hasNovaPoshta, searchCities, searchPoints } from './delivery.js';
 import { saveUpload, store } from './store.js';
 import { adminPage, mountSeo } from './seo.js';
+import { applyRu, needsRu, translateProduct } from './translate.js';
 
 const IS_PROD = Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (IS_PROD ? '' : 'admin123');
@@ -84,6 +85,41 @@ const write = (fn) => async (req, res, next) => {
   } catch (e) {
     next(e);
   }
+};
+
+// Товари, додані раніше: перекладаємо те, чого ще немає російською (один раз, далі береться з бази).
+let lastFill = 0;
+export async function fillTranslations({ wait = 4000 } = {}) {
+  if (Date.now() - lastFill < 5 * 60 * 1000) return;
+  const db = await store.read();
+  const todo = db.products.filter(needsRu).slice(0, 10);
+  if (!todo.length) return;
+  lastFill = Date.now();
+  const job = (async () => {
+    const done = [];
+    for (const p of todo) {
+      const copy = structuredClone(p);
+      if (await translateProduct(copy)) done.push(copy);
+    }
+    if (!done.length) return;
+    await store.update((db2) => {
+      for (const t of done) {
+        const target = db2.products.find((x) => x.id === t.id);
+        if (target) applyRu(target, t);
+      }
+      return { body: null };
+    });
+    lastFill = 0; // можна одразу перевірити, чи лишилось ще
+  })().catch((e) => console.warn('[translate] fill:', e.message));
+  await Promise.race([job, new Promise((r) => setTimeout(r, wait))]);
+}
+const withFill = (wait) => async (req, res, next) => {
+  try {
+    await fillTranslations({ wait });
+  } catch (e) {
+    console.warn('[translate]', e.message);
+  }
+  next();
 };
 
 /* ------------------------------------------------------------ авторизація */
@@ -203,6 +239,7 @@ app.get('/api/delivery/points', hintLimiter, async (req, res) => {
 
 app.get(
   '/api/products',
+  withFill(3000),
   read((req, db) => ({ body: db.products.filter((p) => p.visible).map(withRating(db)) }))
 );
 
@@ -382,32 +419,55 @@ app.post('/api/admin/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/admin/products', requireAdmin, read((req, db) => ({ body: db.products.map(withRating(db)) })));
+app.get('/api/admin/products', requireAdmin, withFill(8000), read((req, db) => ({ body: db.products.map(withRating(db)) })));
 
-app.post(
-  '/api/admin/products',
-  requireAdmin,
-  write((req, db) => {
-    const { value, error } = cleanProduct(req.body ?? {});
-    if (error) return fail(400, error);
-    const product = { id: newProductId(db, value.name), ...value, createdAt: new Date().toISOString() };
-    db.products.push(product);
-    return { status: 201, body: withRating(db)(product) };
-  })
-);
+// Збереження товару: спершу автоматичний переклад на російську (поза блокуванням бази), потім запис.
+async function prepareProduct(body, existing) {
+  const { value, error } = cleanProduct(existing ? { ...existing, ...body } : body);
+  if (error) return { error };
+  value.ruAuto = structuredClone(existing?.ruAuto || {});
+  value.ru.terms = { ...(existing?.ru?.terms || {}) };
+  try {
+    await translateProduct(value);
+  } catch (e) {
+    console.warn('[translate]', e.message); // без перекладу товар однаково зберігається
+  }
+  return { value };
+}
 
-app.put(
-  '/api/admin/products/:id',
-  requireAdmin,
-  write((req, db) => {
-    const existing = db.products.find((p) => p.id === req.params.id);
-    if (!existing) return fail(404, 'Товар не знайдено');
-    const { value, error } = cleanProduct({ ...existing, ...req.body });
-    if (error) return fail(400, error);
-    Object.assign(existing, value);
-    return { body: withRating(db)(existing) };
-  })
-);
+app.post('/api/admin/products', requireAdmin, async (req, res, next) => {
+  try {
+    const { value, error } = await prepareProduct(req.body ?? {}, null);
+    if (error) return res.status(400).json({ error });
+    const out = await store.update((db) => {
+      const product = { id: newProductId(db, value.name), ...value, createdAt: new Date().toISOString() };
+      db.products.push(product);
+      return { status: 201, body: withRating(db)(product) };
+    });
+    res.status(out.status).json(out.body);
+  } catch (e) {
+    next(e);
+  }
+});
+
+app.put('/api/admin/products/:id', requireAdmin, async (req, res, next) => {
+  try {
+    const before = (await store.read()).products.find((p) => p.id === req.params.id);
+    if (!before) return res.status(404).json({ error: 'Товар не знайдено' });
+    const { value, error } = await prepareProduct(req.body ?? {}, before);
+    if (error) return res.status(400).json({ error });
+    const out = await store.update((db) => {
+      const existing = db.products.find((p) => p.id === req.params.id);
+      if (!existing) return fail(404, 'Товар не знайдено');
+      Object.assign(existing, value);
+      return { body: withRating(db)(existing) };
+    });
+    res.status(out.status || 200).json(out.body);
+  } catch (e) {
+    next(e);
+  }
+});
+
 
 app.delete(
   '/api/admin/products/:id',

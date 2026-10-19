@@ -1,4 +1,4 @@
-import { nn, pc, pd, perfBio, perfTitle, pn, t, tr, Link, getLang, useLNavigate, useSeo } from '../lib/i18n.jsx';
+import { nn, pc, pd, perfBio, perfTitle, pn, t, tr, Link, getLang, registerProducts, useLNavigate, useSeo } from '../lib/i18n.jsx';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronDown, ChevronUp, Package, ShieldCheck, ShoppingBag, Star, Truck } from 'lucide-react';
@@ -23,6 +23,7 @@ export default function Product() {
     api
       .product(id)
       .then((data) => {
+        registerProducts(data);
         setP(data);
         setError('');
       })

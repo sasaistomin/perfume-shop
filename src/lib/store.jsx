@@ -1,4 +1,4 @@
-import { pn, t } from './i18n.jsx';
+import { pn, registerProducts, t } from './i18n.jsx';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from './api.js';
 
@@ -41,7 +41,10 @@ export function StoreProvider({ children }) {
     setLoadError('');
     api
       .products()
-      .then(setProducts)
+      .then((list) => {
+        registerProducts(list);
+        setProducts(list);
+      })
       .catch((e) => {
         setLoadError(e.message);
         setProducts((p) => p ?? []);
