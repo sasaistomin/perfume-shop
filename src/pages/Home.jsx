@@ -2,6 +2,7 @@ import { pc, pd, pn, t, Link, usePageSeo } from '../lib/i18n.jsx';
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Gift, Mail, Sparkles } from 'lucide-react';
 import { ProductImg, SiteImg } from '../components/Art.jsx';
+import { HeartButton } from '../components/ui.jsx';
 import { useStore } from '../lib/store.jsx';
 import { api } from '../lib/api.js';
 import { money } from '../lib/format.js';
@@ -169,6 +170,7 @@ function Featured() {
                 >
                   <ProductImg product={p} />
                 </Link>
+                <HeartButton id={p.id} className="fcard-heart" />
                 <div className="fcard-body">
                   <h3>{pn(p)}</h3>
                   <p className="fcard-desc">{pd(p)}</p>

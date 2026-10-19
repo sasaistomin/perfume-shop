@@ -1133,3 +1133,28 @@ img.cover.img-fit {
 .pcard:hover .pcard-media img.img-fit {
   transform: none;
 }
+.pd-main:has(> img.img-fit),
+.pcard-media:has(img.img-fit),
+.thumb:has(img.img-fit) {
+  background: #fff;
+}
+.thumb img.img-fit {
+  padding: 2px;
+}
+
+/* сердечко «в обране» на великій картці головної сторінки */
+.fcard {
+  position: relative;
+}
+.fcard-heart {
+  top: 14px;
+  right: 14px;
+}
+.fcard-media:has(img.img-fit) {
+  background: #fff;
+}
+@media (min-width: 861px) {
+  .fcard:not(.fcard--on) .fcard-heart {
+    display: none;
+  }
+}

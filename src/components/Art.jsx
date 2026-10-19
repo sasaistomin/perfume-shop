@@ -56,26 +56,18 @@ export function Img({ src, alt = '', className = '', fallback = null, ...rest })
 
 // Якщо пропорції фото сильно відрізняються від рамки (вузький флакон, вирізане фото на білому тлі),
 // показуємо фото повністю, а не обрізаємо й не розтягуємо його.
-function fitMode(img) {
-  const box = img.parentElement?.getBoundingClientRect();
-  if (!box?.width || !box?.height || !img.naturalWidth || !img.naturalHeight) return '';
-  const photo = img.naturalWidth / img.naturalHeight;
-  const frame = box.width / box.height;
-  const ratio = photo > frame ? photo / frame : frame / photo;
-  const small = img.naturalWidth < box.width * 0.9 || img.naturalHeight < box.height * 0.9;
-  return ratio > 1.25 || (small && ratio > 1.08) ? 'img-fit' : '';
-}
+// Фото, завантажені через адмінку (зазвичай флакон на білому тлі), показуємо цілком з полями,
+// щоб флакон не обрізався на жодному екрані. Фото оформлення сайту (/images/…) заповнюють рамку.
+const isUpload = (src) => /^https?:\/\//.test(src || '');
 
 export function ProductImg({ product, index = 0, dark, className = '' }) {
   const src = product?.images?.[index];
-  const [fit, setFit] = useState('');
   return (
     <Img
       key={src}
       src={src}
       alt={pn(product)}
-      onLoad={(e) => setFit(fitMode(e.currentTarget))}
-      className={`cover ${fit} ${className}`}
+      className={`cover ${isUpload(src) ? 'img-fit' : ''} ${className}`}
       fallback={
         <Bottle
           name={product?.name}
