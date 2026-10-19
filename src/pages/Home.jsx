@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Gift, Mail, Sparkles } from 'lucide-react';
 import { ProductImg, SiteImg } from '../components/Art.jsx';
 import { HeartButton } from '../components/ui.jsx';
+import Bubbles from '../components/Bubbles.jsx';
 import { useStore } from '../lib/store.jsx';
 import { api } from '../lib/api.js';
 import { money } from '../lib/format.js';
@@ -22,6 +23,7 @@ export default function Home() {
 function Hero() {
   return (
     <section className="home-hero">
+      <Bubbles />
       <div className="container home-hero-grid">
         <div className="home-hero-copy reveal">
           <p className="home-hero-brand">DeLas</p>

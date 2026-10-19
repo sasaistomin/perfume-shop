@@ -1158,3 +1158,16 @@ img.cover.img-fit {
     display: none;
   }
 }
+
+/* кружечки на фоні головного екрана */
+.home-hero {
+  position: relative;
+  isolation: isolate;
+}
+.bubbles {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  display: block;
+}
