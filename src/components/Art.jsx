@@ -120,6 +120,7 @@ const NOTE_ART = {
   musk: { bg: '#eceef3', fg: '#7b8196' },
   sweet: { bg: '#f8eedd', fg: '#a8763c' },
   amber: { bg: '#f8e7cf', fg: '#c07a1d' },
+  nut: { bg: '#f1e2cf', fg: '#8a5a2b' },
   other: { bg: '#f1ede7', fg: '#8a7a68' },
 };
 
@@ -198,6 +199,13 @@ function NoteGlyph({ type, fg }) {
           <path d="M18 46c10-4 22-16 28-28" />
           <path d="M22 48c10-4 22-16 28-28" />
           <circle cx="18" cy="20" r="5" fill={fg} fillOpacity=".2" />
+        </g>
+      );
+    case 'nut':
+      return (
+        <g {...s}>
+          <path d="M32 14c9 0 15 8 15 18s-6 18-15 18-15-8-15-18 6-18 15-18z" fill={fg} fillOpacity=".15" />
+          <path d="M32 14v36M24 22c3 3 3 17 0 20M40 22c-3 3-3 17 0 20" />
         </g>
       );
     case 'amber':

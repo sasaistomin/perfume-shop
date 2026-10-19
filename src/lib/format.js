@@ -27,6 +27,7 @@ export const NOTE_TYPE_LABEL = {
   musk: 'Мускусна',
   sweet: 'Солодка',
   amber: 'Амброва',
+  nut: 'Горіхова',
   other: 'Інша',
 };
 

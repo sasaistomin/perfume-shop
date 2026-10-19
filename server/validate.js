@@ -3,7 +3,7 @@
 // тут ми додатково перевіряємо типи, довжини та формат кожного поля.
 
 export const GENDERS = ['male', 'female', 'unisex'];
-export const NOTE_TYPES = ['citrus', 'flower', 'fruit', 'herb', 'spice', 'wood', 'leather', 'musk', 'sweet', 'amber', 'other'];
+export const NOTE_TYPES = ['citrus', 'flower', 'fruit', 'herb', 'spice', 'wood', 'leather', 'musk', 'sweet', 'amber', 'nut', 'other'];
 
 const URL_RE = /^(https?:\/\/[^\s]+|\/(?!\/)[^\s]*)$/i;
 const COLOR_RE = /^#[0-9a-f]{6}$/i;
