@@ -1570,3 +1570,14 @@
     border-color: currentColor;
   }
 }
+
+/* короткий опис на картках товару: 3 рядки, далі «…» (повний опис — на сторінці товару) */
+.pcard-desc,
+.fcard-desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
